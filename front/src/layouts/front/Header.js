@@ -2,12 +2,64 @@ import React from 'react'
 import Navbar from './Navbar'
 import { Helmet } from "react-helmet";
 import { Link } from 'react-router-dom';
+import '../../assets/front/css/style.css'
 
- const Header = () => {
+import { useNavigate  } from 'react-router-dom'
+
+import axios from 'axios';
+import swal from 'sweetalert'
+
+const Header = () => {
+
+  const navigate = useNavigate ();
+  let AuthList="";
+  
+  async function onLogout(e){
+	e.preventDefault();
+	const csrf = await axios.get('/sanctum/csrf-cookie');
+    await axios.post("api/logout").then(res=>{
+      if(res.data.status==200)
+	  {
+		localStorage.removeItem("auth_token");
+        localStorage.removeItem("auth_name");
+        
+        swal({
+          title: "Çıkış Başarılı",
+          icon: "success",
+          button: "Tamam",
+        });
+
+        navigate('/');
+	  }
+	});	
+  }
+
+
+
+  if(!localStorage.getItem("auth_token"))
+  {
+	AuthList = (
+			<ul className="header-links pull-right">
+				<li><Link to="/login"><i className="fa fa-user-o"></i>Giriş Yap</Link></li>
+				<li><Link to="/register"><i className="fa fa-user-o"></i>Kayıt Ol</Link></li>
+			</ul>
+	);
+
+  }
+  else 
+  {
+	AuthList = (
+		<ul className="header-links pull-right">
+			<li><Link to="/profile"><i className="fa fa-user-o"></i>Hesabım</Link></li>
+			<li><button onClick={onLogout} type="button" className="btn btn-danger btn-sm text-white" >Çıkış Yap</button></li>
+		</ul>
+
+	); 
+  }
+
   return (
        <>
 	   	<Helmet>
-      		<link href="assets/front/css/style.css" rel="stylesheet" ></link>
       		<link href="assets/front/css/bootstrap.min.css" rel="stylesheet" ></link>
     	</Helmet>
 	   	 <header>
@@ -18,9 +70,7 @@ import { Link } from 'react-router-dom';
 						<li><a href="#"><i className="fa fa-envelope-o"></i> email@email.com</a></li>
 						<li><a href="#"><i className="fa fa-map-marker"></i> 1734 Stonecoal Road</a></li>
 					</ul>
-					<ul className="header-links pull-right">
-						<li><Link to="/login"><i className="fa fa-user-o"></i>Giriş Yap</Link></li>
-					</ul>
+					{AuthList}
 				</div>
 			</div>
 

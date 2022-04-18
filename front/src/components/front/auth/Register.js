@@ -2,15 +2,18 @@ import axios from 'axios';
 import React, { useState } from 'react'
 import Helmet from 'react-helmet'
 import { Link } from 'react-router-dom'
+import { useNavigate  } from 'react-router-dom'
+import swal from 'sweetalert'
 
 const Register = () => {
 
-
+    const navigate = useNavigate ();
     const [registerState, setRegister] = useState({
         'name':'',
         'surname':'',
         'email':'',
-        'password':''
+        'password':'',
+        'validation_error':[]
     });
 
     const HandleChange = (e) => {
@@ -23,23 +26,45 @@ const Register = () => {
     }
 
 
-    const onSubmit = (e) => {
-        e.preventDefault();
-        console.log("Hello");
+    async function onSubmit(e){
+          e.preventDefault();
 
-        //get data
-        const data = {
-            name: registerState.name,
-            surname:registerState.surname,
-            email:registerState.email,
-            password:registerState.password,
-        }
-        axios.get('/sanctum/csrf-cookie').then(response => {
-            axios.post("api/register",data).then(res=>{
-                console.log(res);
-            })
+          const data = {
+              "name": registerState.name,
+              "surname":registerState.surname,
+              "email":registerState.email,
+              "password":registerState.password,
+          }
+          
+          
+          const csrf = await axios.get('/sanctum/csrf-cookie');
+
+
+          await axios.post("api/register",data).then(res=>{
+          if(res.data.status==200){
+
+
+            localStorage.setItem("auth_token",res.data.token);
+            localStorage.setItem("auth_name",res.data.username);
+            
+            swal({
+              title: "Kayıt Başarılı",
+              icon: "success",
+              button: "Tamam",
+            });
+
+            navigate('/');
+
+          }
+          else
+          {
+            setRegister({
+              ...registerState, 
+              ['validation_error'] :res.data.validation_error
+            });
+
+          }
         })
-        // console.log(data);
 
 
 
@@ -48,9 +73,13 @@ const Register = () => {
 
   return (
  <>
+    
+    
     <Helmet>
     <link href="assets/admin/css/soft-ui-dashboard.css" rel="stylesheet" ></link>
-</Helmet>
+    </Helmet>
+
+
     <main className="main-content  mt-0">
     <section className="min-vh-100 mb-8">
       <div className="page-header align-items-start min-vh-50 pt-5 pb-11 m-3 border-radius-lg" style={{backgroundImage: "url('assets/admin/img/curved-images/curved14.jpg')"}}>
@@ -73,18 +102,25 @@ const Register = () => {
               </div>
               <div className="card-body">
                 <form onSubmit={onSubmit} >
-                  <div className="mb-3">
+                  <div className="my-1">
                     <input type="text" className="form-control" placeholder="Ad" name="name" onChange={HandleChange}   value={registerState.name}/>
                   </div>
-                  <div className="mb-3">
+                  {registerState.validation_error['name']!==null? <div className="input-error">{registerState.validation_error['name']}</div> : ''}
+                  <div className="my-1">
                     <input type="text" className="form-control" placeholder="Soyad" name="surname" onChange={HandleChange} value={registerState.surname}/>
                   </div>
-                  <div className="mb-3">
+                  {registerState.validation_error['surname']!==null? <div className="input-error">{registerState.validation_error['surname']}</div> : ''}
+                  <div className="my-1">
                     <input type="email" className="form-control" placeholder="E Posta" name="email" onChange={HandleChange} value={registerState.email}/>
                   </div>
-                  <div className="mb-3">
+                  {registerState.validation_error['email']!==null? <div className="input-error">{registerState.validation_error['email']}</div> : ''}
+
+                  <div className="my-1">
                     <input type="password" className="form-control" placeholder="Parola" name="password" onChange={HandleChange} value={registerState.password}/>
                   </div>
+
+                  {registerState.validation_error['password']!==null? <div className="input-error">{registerState.validation_error['password']}</div> : ''}
+
                   <div className="text-center">
                     <button type="submit" className="btn bg-gradient-dark w-100 my-4 mb-2">Kayıt Ol</button>
                   </div>
