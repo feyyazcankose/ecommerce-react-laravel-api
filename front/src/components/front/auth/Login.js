@@ -57,7 +57,6 @@ const Login = () => {
       {
         setStateLogin({
           ...loginState, 
-          ['validation_error'] :res.data.validation_error,
           ['error'] :res.data.error
         });
 
